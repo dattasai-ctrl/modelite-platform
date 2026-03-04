@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaigns - Modelite</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="enhanced.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">MODELITE</div>
+            <ul class="nav-links">
+                <li><a href="index.html#home">Home</a></li>
+                <li><a href="portfolio.html">Portfolio</a></li>
+                <li><a href="campaigns.html" class="active">Campaigns</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+                <li id="authLink"><a href="auth.html" class="nav-auth-btn">Join Us</a></li>
+                <li id="profileLink" style="display:none;"><a href="profile.html" class="nav-auth-btn">Profile</a></li>
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Search Section -->
+    <section class="search-section" style="background: #f8f9fa; padding: 30px 0;">
+        <div class="container">
+            <h2 style="margin-bottom: 20px;">Find Campaigns</h2>
+            <div class="search-container">
+                <input type="text" id="campaignSearch" class="search-input" 
+                       placeholder="Search campaigns by title or description...">
+                <div id="searchResults" class="search-results"></div>
+            </div>
+            <div class="filter-group" style="margin-top: 20px;">
+                <button class="filter-btn active" onclick="filterCampaigns('all')">All</button>
+                <button class="filter-btn" onclick="filterCampaigns('open')">Open</button>
+                <button class="filter-btn" onclick="filterCampaigns('closed')">Closed</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Campaigns List -->
+    <section class="campaigns-section">
+        <div class="container">
+            <div id="campaignsList" class="campaigns-grid">
+                <div class="campaign-card loading">
+                    <p>Loading campaigns...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Application Modal -->
+    <div class="modal" id="applicationModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeApplicationModal()">&times;</span>
+            <h2>Apply for Campaign</h2>
+            <div id="campaignDetails" style="margin-bottom: 20px;"></div>
+            <form id="applicationForm" onsubmit="submitApplication(event)">
+                <div class="form-group">
+                    <label for="appMessage">Why do you want to apply? (Optional)</label>
+                    <textarea id="appMessage" rows="4" placeholder="Tell us why you're interested in this campaign..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Application</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="components.js"></script>
+    <script src="script.js"></script>
+    <script>
+        let currentFilter = 'all';
+        let allCampaigns = [];
+        let selectedCampaignId = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthStatus();
+            loadCampaigns();
+            setupSearch();
+        });
+
+        // Check if user is logged in
+        function checkAuthStatus() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.getElementById('authLink').style.display = 'none';
+                document.getElementById('profileLink').style.display = 'block';
+            }
+        }
+
+        // Load campaigns from API
+        async function loadCampaigns() {
+            try {
+                const response = await api.get('/api/campaigns');
+                allCampaigns = response.campaigns || [];
+                displayCampaigns(allCampaigns);
+            } catch (error) {
+                console.error('Error loading campaigns:', error);
+                document.getElementById('campaignsList').innerHTML = 
+                    '<p class="error-message">Failed to load campaigns</p>';
+            }
+        }
+
+        // Display campaigns
+        function displayCampaigns(campaigns) {
+            const container = document.getElementById('campaignsList');
+            
+            if (!campaigns || campaigns.length === 0) {
+                container.innerHTML = '<p>No campaigns found</p>';
+                return;
+            }
+
+            container.innerHTML = campaigns.map(campaign => `
+                <div class="campaign-card">
+                    <div class="campaign-header">
+                        <h3>${campaign.title}</h3>
+                        <span class="badge ${campaign.status === 'open' ? 'badge-success' : 'badge-danger'}">
+                            ${campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
+                        </span>
+                    </div>
+                    <p class="campaign-description">${campaign.description || 'No description provided'}</p>
+                    <div class="campaign-details">
+                        <div class="detail-item">
+                            <strong>Budget:</strong> ${campaign.budget || 'TBD'}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Deadline:</strong> ${campaign.deadline || 'No deadline'}
+                        </div>
+                        <div class="detail-item">
+                            <strong>Category:</strong> ${campaign.required_category || 'Any'}
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" 
+                            onclick="openApplicationModal(${campaign.id})"
+                            ${campaign.status !== 'open' ? 'disabled' : ''}>
+                        ${campaign.status === 'open' ? 'Apply Now' : 'Campaign Closed'}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Filter campaigns
+        function filterCampaigns(status) {
+            currentFilter = status;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            if (status === 'all') {
+                displayCampaigns(allCampaigns);
+            } else {
+                const filtered = allCampaigns.filter(c => c.status === status);
+                displayCampaigns(filtered);
+            }
+        }
+
+        // Setup search
+        function setupSearch() {
+            const searchInput = document.getElementById('campaignSearch');
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                if (query.length === 0) {
+                    displayCampaigns(allCampaigns);
+                } else {
+                    const filtered = allCampaigns.filter(c => 
+                        c.title.toLowerCase().includes(query) ||
+                        (c.description && c.description.toLowerCase().includes(query))
+                    );
+                    displayCampaigns(filtered);
+                }
+            });
+        }
+
+        // Application modal
+        function openApplicationModal(campaignId) {
+            const campaign = allCampaigns.find(c => c.id === campaignId);
+            if (!campaign) return;
+
+            selectedCampaignId = campaignId;
+            const details = document.getElementById('campaignDetails');
+            details.innerHTML = `
+                <h3>${campaign.title}</h3>
+                <p>${campaign.description}</p>
+                <p><strong>Budget:</strong> ${campaign.budget}</p>
+                <p><strong>Deadline:</strong> ${campaign.deadline}</p>
+            `;
+
+            document.getElementById('applicationModal').style.display = 'block';
+        }
+
+        function closeApplicationModal() {
+            document.getElementById('applicationModal').style.display = 'none';
+            selectedCampaignId = null;
+            document.getElementById('applicationForm').reset();
+        }
+
+        // Submit application
+        async function submitApplication(event) {
+            event.preventDefault();
+
+            if (!localStorage.getItem('token')) {
+                notifications.show('Please login to apply', 'warning');
+                setTimeout(() => window.location.href = 'auth.html', 1000);
+                return;
+            }
+
+            try {
+                const response = await api.post(`/api/campaigns/${selectedCampaignId}/apply`, {
+                    message: document.getElementById('appMessage').value || ''
+                });
+
+                notifications.show('Application submitted successfully!', 'success');
+                closeApplicationModal();
+                loadCampaigns();
+            } catch (error) {
+                notifications.show('Failed to submit application: ' + error.message, 'error');
+            }
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('applicationModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+
+    <style>
+        .campaigns-section {
+            padding: 60px 0;
+            min-height: 500px;
+        }
+
+        .campaigns-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .campaign-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .campaign-card:hover {
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+
+        .campaign-card.loading {
+            text-align: center;
+            grid-column: 1 / -1;
+        }
+
+        .campaign-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+
+        .campaign-header h3 {
+            margin: 0;
+            font-size: 1.3em;
+            color: #333;
+        }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .campaign-description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .campaign-details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            padding: 5px 0;
+            font-size: 0.95em;
+            color: #555;
+        }
+
+        .detail-item strong {
+            color: #333;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            border-color: #333;
+        }
+
+        .filter-btn.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            animation: slideDown 0.3s ease;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .campaigns-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

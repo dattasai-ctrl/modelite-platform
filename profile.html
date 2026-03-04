@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Modelite</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="profile-styles.css">
+    <link rel="stylesheet" href="enhanced.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">MODELITE</div>
+            <ul class="nav-links">
+                <li><a href="index.html#home">Home</a></li>
+                <li><a href="index.html#portfolio">Portfolio</a></li>
+                <li><a href="index.html#services">Services</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+                <li><a href="#" onclick="logout()">Logout</a></li>
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile Container -->
+    <div class="profile-container">
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="profile-sidebar">
+                <div class="profile-card">
+                    <div class="profile-photo" id="profilePhoto">👤</div>
+                    <h2 id="profileName">Loading...</h2>
+                    <p id="profileCategory" class="profile-category">Model</p>
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <span class="stat-number" id="portfolioCount">0</span>
+                            <span class="stat-label">Portfolio Items</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number" id="applicationsCount">0</span>
+                            <span class="stat-label">Applications</span>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="profile-nav">
+                    <button class="profile-nav-btn active" onclick="showTab('overview')">📋 Overview</button>
+                    <button class="profile-nav-btn" onclick="showTab('edit')">✏️ Edit Profile</button>
+                    <button class="profile-nav-btn" onclick="showTab('portfolio')">📸 Portfolio</button>
+                    <button class="profile-nav-btn" onclick="showTab('applications')">📝 Applications</button>
+                    <button class="profile-nav-btn" onclick="showTab('reviews')">⭐ Reviews</button>
+                    <button class="profile-nav-btn" onclick="window.location.href='messages.html'">💬 Messages</button>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="profile-content">
+                <!-- Overview Tab -->
+                <section id="overview" class="profile-tab active">
+                    <div class="tab-header">
+                        <h2>Profile Overview</h2>
+                    </div>
+                    <div class="profile-info-grid">
+                        <div class="info-item">
+                            <label>Full Name</label>
+                            <p id="infoName">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Email</label>
+                            <p id="infoEmail">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Phone</label>
+                            <p id="infoPhone">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Category</label>
+                            <p id="infoCategory">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Height</label>
+                            <p id="infoHeight">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Weight</label>
+                            <p id="infoWeight">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Measurements</label>
+                            <p id="infoMeasurements">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Age</label>
+                            <p id="infoAge">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Gender</label>
+                            <p id="infoGender">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Location</label>
+                            <p id="infoLocation">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Hair Color</label>
+                            <p id="infoHairColor">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Eye Color</label>
+                            <p id="infoEyeColor">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Experience Level</label>
+                            <p id="infoExperience">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Languages</label>
+                            <p id="infoLanguages">-</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Special Skills</label>
+                            <p id="infoSkills">-</p>
+                        </div>
+                    </div>
+                    <div class="info-item full-width">
+                        <label>Bio</label>
+                        <p id="infoBio" class="bio-text">-</p>
+                    </div>
+                </section>
+
+                <!-- Edit Profile Tab -->
+                <section id="edit" class="profile-tab">
+                    <div class="tab-header">
+                        <h2>Edit Profile</h2>
+                    </div>
+                    <form id="editProfileForm" class="profile-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Profile Photo URL</label>
+                                <input type="url" name="profile_photo_url" placeholder="https://example.com/photo.jpg">
+                            </div>
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="tel" name="phone" placeholder="+1-555-1234">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select name="category">
+                                    <option value="">Select Category</option>
+                                    <option value="Runway">Runway</option>
+                                    <option value="Commercial">Commercial</option>
+                                    <option value="Editorial">Editorial</option>
+                                    <option value="Plus Size">Plus Size</option>
+                                    <option value="Influencer">Influencer</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Experience Level</label>
+                                <select name="experience_level">
+                                    <option value="">Select Level</option>
+                                    <option value="Beginner">Beginner</option>
+                                    <option value="Intermediate">Intermediate</option>
+                                    <option value="Professional">Professional</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Height</label>
+                                <input type="text" name="height" placeholder="e.g., 5'10\"">
+                            </div>
+                            <div class="form-group">
+                                <label>Weight (lbs)</label>
+                                <input type="number" name="weight" placeholder="120">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Age</label>
+                                <input type="number" name="age" min="16" max="100" placeholder="21">
+                            </div>
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select name="gender">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Non-binary">Non-binary</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Measurements</label>
+                                <input type="text" name="measurements" placeholder="e.g., 34-24-34">
+                            </div>
+                            <div class="form-group">
+                                <label>Hair Color</label>
+                                <input type="text" name="hair_color" placeholder="e.g., Blonde">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Eye Color</label>
+                                <input type="text" name="eye_color" placeholder="e.g., Blue">
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <input type="text" name="location" placeholder="City, Country">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Languages</label>
+                                <input type="text" name="languages" placeholder="e.g., English, Spanish, French">
+                            </div>
+                            <div class="form-group">
+                                <label>Availability</label>
+                                <select name="availability">
+                                    <option value="">Select Availability</option>
+                                    <option value="Full-time">Full-time</option>
+                                    <option value="Part-time">Part-time</option>
+                                    <option value="Flexible">Flexible</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>Special Skills</label>
+                            <textarea name="special_skills" placeholder="e.g., Acting, Singing, Dancing, Martial Arts"></textarea>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>Bio</label>
+                            <textarea name="bio" placeholder="Tell us about yourself and your modeling experience..."></textarea>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label>Portfolio URL</label>
+                            <input type="url" name="portfolio_url" placeholder="https://yourportfolio.com">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Instagram Handle</label>
+                                <input type="text" name="instagram_handle" placeholder="@yourinstagram">
+                            </div>
+                            <div class="form-group">
+                                <label>Twitter Handle</label>
+                                <input type="text" name="twitter_handle" placeholder="@yourtwitter">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="cta-button">Save Changes</button>
+                    </form>
+                </section>
+
+                <!-- Portfolio Tab -->
+                <section id="portfolio" class="profile-tab">
+                    <div class="tab-header">
+                        <h2>Portfolio</h2>
+                        <button class="cta-button" onclick="openPortfolioModal()">+ Add Photo</button>
+                    </div>
+                    <div id="portfolioGrid" class="portfolio-grid">
+                        <p>Loading portfolio...</p>
+                    </div>
+                </section>
+
+                <!-- Applications Tab -->
+                <section id="applications" class="profile-tab">
+                    <div class="tab-header">
+                        <h2>Campaign Applications</h2>
+                    </div>
+                    <div id="applicationsList" class="applications-list">
+                        <p>No applications yet. <a href="index.html#campaigns">Browse campaigns</a></p>
+                    </div>
+                </section>
+
+                <!-- Reviews Tab -->
+                <section id="reviews" class="profile-tab">
+                    <div class="tab-header">
+                        <h2>Your Reviews & Ratings</h2>
+                    </div>
+                    <div id="reviewsContainer" class="reviews-container">
+                        <p>Loading reviews...</p>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add Portfolio Modal -->
+    <div id="portfolioModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Portfolio Photo</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="portfolioForm" onsubmit="submitPortfolio(event)">
+                <div class="form-group">
+                    <label>Photo URL *</label>
+                    <input type="url" name="image_url" placeholder="https://example.com/photo.jpg" required>
+                </div>
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" name="title" placeholder="e.g., Fashion Week 2024">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select name="category">
+                        <option value="">Select Category</option>
+                        <option value="Runway">Runway</option>
+                        <option value="Commercial">Commercial</option>
+                        <option value="Editorial">Editorial</option>
+                        <option value="Headshot">Headshot</option>
+                        <option value="Lifestyle">Lifestyle</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" placeholder="Tell us about this photo..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="cta-button">Add Photo</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="components.js"></script>
+    <script src="profile-script.js"></script>
+</body>
+</html>

@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio - Modelite</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="enhanced.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">MODELITE</div>
+            <ul class="nav-links">
+                <li><a href="index.html#home">Home</a></li>
+                <li><a href="portfolio.html" class="active">Portfolio</a></li>
+                <li><a href="campaigns.html">Campaigns</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+                <li id="authLink"><a href="auth.html" class="nav-auth-btn">Join Us</a></li>
+                <li id="profileLink" style="display:none;"><a href="profile.html" class="nav-auth-btn">Profile</a></li>
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="portfolio-hero">
+        <div class="container">
+            <h1>Our Talent</h1>
+            <p>Discover our diverse portfolio of professional models</p>
+        </div>
+    </section>
+
+    <!-- Search & Filter -->
+    <section class="portfolio-filters">
+        <div class="container">
+            <div class="search-container" style="margin-bottom: 20px;">
+                <input type="text" id="modelSearch" class="search-input" 
+                       placeholder="Search models by name or category...">
+                <div id="searchResults" class="search-results"></div>
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn active" onclick="filterModels('all')">All</button>
+                <button class="filter-btn" onclick="filterModels('runway')">Runway</button>
+                <button class="filter-btn" onclick="filterModels('commercial')">Commercial</button>
+                <button class="filter-btn" onclick="filterModels('editorial')">Editorial</button>
+                <button class="filter-btn" onclick="filterModels('plus-size')">Plus Size</button>
+                <button class="filter-btn" onclick="filterModels('influencer')">Influencer</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Models Grid -->
+    <section class="portfolio-section">
+        <div class="container">
+            <div id="modelsList" class="models-grid">
+                <div class="model-card loading">
+                    <p>Loading models...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Model Detail Modal -->
+    <div class="modal" id="modelModal">
+        <div class="modal-content model-modal">
+            <span class="close" onclick="closeModelModal()">&times;</span>
+            <div class="model-modal-content" id="modelModalContent">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="components.js"></script>
+    <script src="script.js"></script>
+    <script>
+        let currentFilter = 'all';
+        let allModels = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthStatus();
+            loadModels();
+            setupSearch();
+        });
+
+        // Check if user is logged in
+        function checkAuthStatus() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                document.getElementById('authLink').style.display = 'none';
+                document.getElementById('profileLink').style.display = 'block';
+            }
+        }
+
+        // Load models from API
+        async function loadModels() {
+            try {
+                const response = await api.get('/api/models');
+                allModels = response.models || [];
+                displayModels(allModels);
+            } catch (error) {
+                console.error('Error loading models:', error);
+                document.getElementById('modelsList').innerHTML = 
+                    '<p class="error-message">Failed to load models</p>';
+            }
+        }
+
+        // Display models
+        function displayModels(models) {
+            const container = document.getElementById('modelsList');
+            
+            if (!models || models.length === 0) {
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No models found</p>';
+                return;
+            }
+
+            container.innerHTML = models.map(model => `
+                <div class="model-card" onclick="openModelModal(${model.id})">
+                    <div class="model-image">
+                        ${model.image_url ? 
+                            `<img src="${model.image_url}" alt="${model.name}">` : 
+                            `<div class="image-placeholder">📸</div>`
+                        }
+                    </div>
+                    <div class="model-info">
+                        <h3>${model.name}</h3>
+                        <p class="model-category">${model.category || 'Model'}</p>
+                        <p class="model-experience">${model.experience || 'Professional'}</p>
+                        <p class="model-rate">${model.rate ? 'Rate: ' + model.rate : 'Rate: Negotiable'}</p>
+                        <button class="btn btn-small" onclick="openModelModal(${model.id}); event.stopPropagation();">
+                            View Profile
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filter models
+        function filterModels(category) {
+            currentFilter = category;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            if (category === 'all') {
+                displayModels(allModels);
+            } else {
+                const filtered = allModels.filter(m => 
+                    m.category && m.category.toLowerCase().includes(category.toLowerCase())
+                );
+                displayModels(filtered);
+            }
+        }
+
+        // Setup search
+        function setupSearch() {
+            const searchInput = document.getElementById('modelSearch');
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                if (query.length === 0) {
+                    displayModels(allModels);
+                } else {
+                    const filtered = allModels.filter(m => 
+                        m.name.toLowerCase().includes(query) ||
+                        (m.category && m.category.toLowerCase().includes(query))
+                    );
+                    displayModels(filtered);
+                }
+            });
+        }
+
+        // Model modal
+        async function openModelModal(modelId) {
+            const model = allModels.find(m => m.id === modelId);
+            if (!model) return;
+
+            const contentDiv = document.getElementById('modelModalContent');
+            contentDiv.innerHTML = `
+                <div class="model-detail">
+                    <div class="modal-header">
+                        <h2>${model.name}</h2>
+                        <span class="badge">${model.category || 'Model'}</span>
+                    </div>
+                    
+                    <div class="modal-image">
+                        ${model.image_url ? 
+                            `<img src="${model.image_url}" alt="${model.name}">` : 
+                            `<div class="image-placeholder-large">📸</div>`
+                        }
+                    </div>
+
+                    <div class="model-details-section">
+                        <div class="detail-row">
+                            <strong>Experience:</strong>
+                            <span>${model.experience || 'Professional'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <strong>Rate:</strong>
+                            <span>${model.rate || 'Negotiable'}</span>
+                        </div>
+                        ${model.description ? `
+                            <div class="detail-row full-width">
+                                <strong>Bio:</strong>
+                                <p>${model.description}</p>
+                            </div>
+                        ` : ''}
+                        ${model.contact_email ? `
+                            <div class="detail-row full-width">
+                                <strong>Contact:</strong>
+                                <p><a href="mailto:${model.contact_email}">${model.contact_email}</a></p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <div id="reviewsSection" style="margin-top: 30px;"></div>
+
+                    <div class="modal-actions">
+                        <button class="btn btn-primary" onclick="contactModel(${model.id})">
+                            Contact Model
+                        </button>
+                        <button class="btn btn-secondary" onclick="closeModelModal()">Close</button>
+                    </div>
+                </div>
+            `;
+
+            // Load reviews
+            loadModelReviews(modelId);
+
+            document.getElementById('modelModal').style.display = 'block';
+        }
+
+        async function loadModelReviews(modelId) {
+            try {
+                // Note: You may need to add a GET /api/reviews/<model_id> endpoint to the backend
+                const section = document.getElementById('reviewsSection');
+                section.innerHTML = `
+                    <div class="reviews-container">
+                        <h3>Reviews</h3>
+                        <p style="color: #666;">No reviews yet. Be the first to review!</p>
+                        ${localStorage.getItem('token') ? `
+                            <button class="btn btn-small" onclick="openReviewForm(${modelId})">
+                                Add Review
+                            </button>
+                        ` : `
+                            <p><a href="auth.html">Login</a> to leave a review</p>
+                        `}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading reviews:', error);
+            }
+        }
+
+        function openReviewForm(modelId) {
+            // This would open a form to submit a review
+            // For now, just show a prompt
+            const rating = prompt('Rate this model (1-5):', '5');
+            if (rating && (rating >= 1 && rating <= 5)) {
+                const comment = prompt('Add a comment (optional):', '');
+                submitReview(modelId, rating, comment);
+            }
+        }
+
+        async function submitReview(modelId, rating, comment) {
+            try {
+                const response = await api.post('/api/reviews', {
+                    model_id: modelId,
+                    rating: parseInt(rating),
+                    comment: comment || ''
+                });
+
+                notifications.show('Review submitted successfully!', 'success');
+                loadModels(); // Refresh
+            } catch (error) {
+                notifications.show('Failed to submit review: ' + error.message, 'error');
+            }
+        }
+
+        function contactModel(modelId) {
+            const model = allModels.find(m => m.id === modelId);
+            if (model && model.contact_email) {
+                window.location.href = `mailto:${model.contact_email}?subject=Modeling Opportunity`;
+            } else {
+                notifications.show('Unable to contact this model', 'error');
+            }
+        }
+
+        function closeModelModal() {
+            document.getElementById('modelModal').style.display = 'none';
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('modelModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+
+    <style>
+        .portfolio-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+        }
+
+        .portfolio-hero h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .portfolio-hero p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .portfolio-filters {
+            background: #f8f9fa;
+            padding: 40px 0;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .portfolio-section {
+            padding: 60px 0;
+        }
+
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .model-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .model-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .model-card.loading {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            background: #f8f9fa;
+        }
+
+        .model-image {
+            width: 100%;
+            height: 300px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .model-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-placeholder,
+        .image-placeholder-large {
+            font-size: 4em;
+        }
+
+        .image-placeholder-large {
+            font-size: 6em;
+        }
+
+        .model-info {
+            padding: 20px;
+        }
+
+        .model-info h3 {
+            margin: 0 0 5px 0;
+            color: #333;
+            font-size: 1.3em;
+        }
+
+        .model-category {
+            color: #667eea;
+            font-weight: 600;
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+
+        .model-experience,
+        .model-rate {
+            color: #666;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        .model-modal {
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .model-detail {
+            padding: 20px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .modal-image {
+            width: 100%;
+            height: 400px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .modal-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .model-details-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-row.full-width {
+            flex-direction: column;
+        }
+
+        .detail-row.full-width p {
+            margin: 10px 0 0 0;
+        }
+
+        .reviews-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .reviews-container h3 {
+            margin-top: 0;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .models-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+
+            .portfolio-hero h1 {
+                font-size: 2em;
+            }
+
+            .filter-group {
+                flex-direction: column;
+            }
+
+            .filter-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</body>
+</html>
